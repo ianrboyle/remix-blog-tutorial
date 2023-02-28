@@ -40,6 +40,31 @@ async function seed() {
     },
   });
 
+
+  const posts = [
+    {
+    slug: 'my-first-post',
+    title: 'My First Post',
+    markdown: `
+    #Floating the trails
+    just some letters and words sdfsdfsadafdfasdfsdfsdfs dfsdfsdfsdffsdsdfsdfsadafdfasdfsdf sdfsdfsdfsdfsdffsd`.trim()
+  },
+    {
+    slug: 'my-second-post',
+    title: 'My Second Post',
+    markdown: `
+    #Second post:  Floating the trails
+    just some letters and words sdfsdfsadafdfasdfsdfsdfs dfsdfsdfsdffsdsdfsdfsadafdfasdfsdf sdfsdfsdfsdfsdffsd`.trim()
+    }
+  ];
+
+  for (const post of posts){
+    await prisma.post.upsert({
+      where: {slug: post.slug},
+      update: post,
+      create: post
+    });
+  }
   console.log(`Database has been seeded. 🌱`);
 }
 
