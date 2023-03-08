@@ -2,8 +2,16 @@ import type { ActionArgs, ActionFunction} from "@remix-run/node";
 import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { Form, useActionData, useNavigation } from "@remix-run/react";
+import invariant from "tiny-invariant";
 import { createPost } from "~/models/post.server";
 
+
+
+type ActionData = {
+  title: null | string,
+  slug: null | string,
+  markdown: null | string
+} | undefined 
 export const action: ActionFunction = async ({ request} : ActionArgs) => {
   await new Promise((res) => setTimeout(res, 1000));
   const formData = await request.formData();
@@ -20,7 +28,9 @@ export const action: ActionFunction = async ({ request} : ActionArgs) => {
   {
     throw new Error(`Form not submitted correctly.`);
   }
-  const errors = {
+  // another way to do validation
+  // invariant(typeof title === 'string', 'title must be a string')
+  const errors: ActionData = {
     title: title ? null : "Title is required",
     slug: slug ? null : "Slug is required",
     markdown: markdown ? null : "Markdown is required",
@@ -29,7 +39,7 @@ export const action: ActionFunction = async ({ request} : ActionArgs) => {
     (errorMessage) => errorMessage
   );
   if (hasErrors) {
-    return json(errors);
+    return json<ActionData>(errors);
   }
 
   const formFields = {title, slug, markdown}
@@ -40,7 +50,7 @@ export const action: ActionFunction = async ({ request} : ActionArgs) => {
 const inputClassName = `w-full rounded border border-gray-500 px-2 py-1 text-lg`;
 
 export default function NewPost() {
-  const errors = useActionData<typeof action>();
+  const errors = useActionData() as ActionData;
 
   const navigation = useNavigation();
   const isCreating = Boolean(
