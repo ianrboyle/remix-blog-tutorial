@@ -1,17 +1,21 @@
-import type { ActionArgs, ActionFunction} from "@remix-run/node";
+import type { ActionArgs, ActionFunction, LoaderFunction} from "@remix-run/node";
 import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { Form, useActionData, useNavigation } from "@remix-run/react";
 import invariant from "tiny-invariant";
 import { createPost } from "~/models/post.server";
+import { requireAdminUser } from "~/session.server";
 
-
+export const loader: LoaderFunction = async ({ request }) => {
+  await requireAdminUser(request);
+  return json({})
+}
 
 type ActionData = {
   title: null | string,
   slug: null | string,
   markdown: null | string
-} | undefined 
+} | undefined;
 export const action: ActionFunction = async ({ request} : ActionArgs) => {
   await new Promise((res) => setTimeout(res, 1000));
   const formData = await request.formData();

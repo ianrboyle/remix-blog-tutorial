@@ -1,3 +1,5 @@
+import type { Post } from "@prisma/client";
+import type { LoaderFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import {
   Link,
@@ -5,11 +7,18 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 
-import { getPosts } from "~/models/post.server";
+import { getPostListings } from "~/models/post.server";
+import { requireAdminUser } from "~/session.server";
 
-export const loader = async () => {
-  return json({ posts: await getPosts() });
+type LoaderData = {
+  posts: Awaited<ReturnType<typeof getPostListings>>
+}
+
+export const loader: LoaderFunction = async ({ request }) => {
+  await requireAdminUser(request);
+  return json<LoaderData>({ posts: await getPostListings() });
 };
+
 
 export default function PostAdmin() {
   const { posts } = useLoaderData<typeof loader>();
@@ -21,7 +30,7 @@ export default function PostAdmin() {
       <div className="grid grid-cols-4 gap-6">
         <nav className="col-span-4 md:col-span-1">
           <ul>
-            {posts.map((post) => (
+            {posts.map((post: Post) => (
               <li key={post.slug}>
                 <Link
                   to={post.slug}
