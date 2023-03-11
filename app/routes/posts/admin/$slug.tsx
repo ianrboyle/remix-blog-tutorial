@@ -3,7 +3,7 @@ import { Post } from "@prisma/client";
 import type { ActionArgs, ActionFunction, LoaderFunction} from "@remix-run/node";
 import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
+import { Form, useActionData, useCatch, useLoaderData, useNavigation, useParams } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import { createPost, deletePost, getPost, updatePost } from "~/models/post.server";
@@ -18,6 +18,9 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     return json<LoaderData>({})
   }
   const post = await getPost(params.slug)
+  if (!post) {
+    throw new Response('Not Found', {status: 404})
+  }
   return json<LoaderData>({post})
 }
 
@@ -162,4 +165,15 @@ export default function NewPost() {
       </div>
     </Form>
   );
+}
+
+export function CatchBoundary() {
+  const caught = useCatch()
+  const params = useParams();
+  
+  if(caught.status === 404){
+
+    return <div>Uh oh! The post with slug: "{params.slug}"doesn't exist.</div>
+  }
+  throw new Error(`Unsupported thrown response status code: ${caught.status}`)
 }
