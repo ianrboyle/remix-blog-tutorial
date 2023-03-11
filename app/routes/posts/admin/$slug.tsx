@@ -1,14 +1,18 @@
 import type { ActionArgs, ActionFunction, LoaderFunction} from "@remix-run/node";
 import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { Form, useActionData, useNavigation } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import invariant from "tiny-invariant";
-import { createPost } from "~/models/post.server";
+import { createPost, getPost } from "~/models/post.server";
 import { requireAdminUser } from "~/session.server";
 
-export const loader: LoaderFunction = async ({ request }) => {
+export const loader: LoaderFunction = async ({ request, params }) => {
   await requireAdminUser(request);
-  return json({})
+  if (params.slug === 'new') {
+    return json({})
+  }
+  const post = await getPost(params.slug)
+  return json({post})
 }
 
 type ActionData = {
@@ -16,7 +20,8 @@ type ActionData = {
   slug: null | string,
   markdown: null | string
 } | undefined;
-export const action: ActionFunction = async ({ request} : ActionArgs) => {
+
+export const action: ActionFunction = async ({ request, params } : ActionArgs) => {
   await new Promise((res) => setTimeout(res, 1000));
   const formData = await request.formData();
   const noteData = Object.fromEntries(formData);
@@ -47,13 +52,18 @@ export const action: ActionFunction = async ({ request} : ActionArgs) => {
   }
 
   const formFields = {title, slug, markdown}
-  await createPost(formFields);
+  if (params.slug === 'new') {
+    await createPost(formFields);
+  } else {
+    //todo update post
+  }
 
   return redirect("/posts/admin")
 }
 const inputClassName = `w-full rounded border border-gray-500 px-2 py-1 text-lg`;
 
 export default function NewPost() {
+  const data = useLoaderData();
   const errors = useActionData() as ActionData;
 
   const navigation = useNavigation();
@@ -61,7 +71,7 @@ export default function NewPost() {
     navigation.state === "submitting"
   );
   return (
-    <Form method="post">
+    <Form method="post" key={data.post?.slug ?? 'new'}>
       <p>
         <label>
           Post Title:{" "}
@@ -72,6 +82,7 @@ export default function NewPost() {
             type="text"
             name="title"
             className={inputClassName}
+            defaultValue={data.post?.title}
           />
         </label>
       </p>
@@ -85,6 +96,7 @@ export default function NewPost() {
             type="text"
             name="slug"
             className={inputClassName}
+            defaultValue={data.post?.slug}
           />
         </label>
       </p>
@@ -103,6 +115,7 @@ export default function NewPost() {
           rows={20}
           name="markdown"
           className={`${inputClassName} font-mono`}
+          defaultValue={data.post?.markdown}
         />
       </p>
       <p className="text-right">
