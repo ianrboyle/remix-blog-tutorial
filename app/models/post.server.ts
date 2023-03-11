@@ -24,3 +24,8 @@ export async function updatePost(
   slug: string, post: Pick<Post, "slug" | "title" | "markdown">) {
   return prisma.post.update({ data: post, where: {slug} });
 }
+
+export async function deletePost(
+  slug: string) {
+  return prisma.post.delete({ where: {slug} });
+}
