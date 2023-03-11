@@ -18,6 +18,7 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     return json<LoaderData>({})
   }
   const post = await getPost(params.slug)
+
   if (!post) {
     throw new Response('Not Found', {status: 404})
   }
@@ -177,3 +178,4 @@ export function CatchBoundary() {
   }
   throw new Error(`Unsupported thrown response status code: ${caught.status}`)
 }
+

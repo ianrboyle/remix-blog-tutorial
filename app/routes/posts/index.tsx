@@ -11,6 +11,7 @@ type LoaderData = {
 export const loader: LoaderFunction = async () => {
 
   const posts = await getPostListings();
+  throw new Error('blah')
   return json<LoaderData>({posts})
 }
 export default function PostsRoute() {
