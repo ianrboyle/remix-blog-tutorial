@@ -3,7 +3,7 @@ import { json} from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { Form, useActionData, useLoaderData, useNavigation } from "@remix-run/react";
 import invariant from "tiny-invariant";
-import { createPost, getPost } from "~/models/post.server";
+import { createPost, getPost, updatePost } from "~/models/post.server";
 import { requireAdminUser } from "~/session.server";
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -55,7 +55,7 @@ export const action: ActionFunction = async ({ request, params } : ActionArgs) =
   if (params.slug === 'new') {
     await createPost(formFields);
   } else {
-    //todo update post
+    await updatePost(params.slug, formFields)
   }
 
   return redirect("/posts/admin")
@@ -67,9 +67,10 @@ export default function NewPost() {
   const errors = useActionData() as ActionData;
 
   const navigation = useNavigation();
-  const isCreating = Boolean(
-    navigation.state === "submitting"
-  );
+  const isCreating = navigation?.formData?.get('intent') === 'create'
+  
+  const isUpdating = navigation?.formData?.get('intent') === 'update'
+  const isNewPost = !data.post
   return (
     <Form method="post" key={data.post?.slug ?? 'new'}>
       <p>
@@ -121,10 +122,14 @@ export default function NewPost() {
       <p className="text-right">
         <button
           type="submit"
+          name="intent"
+          value={isNewPost ? 'create' : 'update'}
           className="rounded bg-blue-500 py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400 disabled:bg-blue-300"
-          disabled={isCreating}
+          disabled={isCreating || isUpdating}
         >
-          {isCreating ? "Creating..." : "Create Post"}
+          {isNewPost ? (isCreating ? "Creating..." : "Create Post"): null}
+          {isNewPost ? null : isUpdating ? 'Updating...' : 'Update'}
+         
         </button>
       </p>
     </Form>
